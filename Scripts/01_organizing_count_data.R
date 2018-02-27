@@ -64,6 +64,13 @@ years <- 1999:2015
 # observation ordinal day #
 VWdata$DOY <- as.numeric(format(VWdata$Date2, "%j"))
 
+# Determine if a plot was surveyed during each year and each replicate 
+
+sampled <- tapply(VWdata$DOY,list(VWdata$Plot,VWdata$Replicate,VWdata$Year),min)
+
+# change sampled to binary 
+sampled[sampled>1]<-1 
+
 # Create a Plot x Replicate array of abundance for the species of interest #
 # this makes an empty 3 dimensional array - Plot x Replicate x Species that is filled with NAs #
 
@@ -86,12 +93,15 @@ temp.sp <- subset(temp.yr, Species == S.O.I[s])
 # for each plot #
          for(k in sites){
                temp.st <- subset(temp.rp, Plot == as.numeric(k))
+               if(years[y]==2003 | years[y] == 2004){next}
                if(years[y]>2005){
-               spec.mat[k,i,y,s] <- as.numeric(length(temp.st$Species[temp.st$New.Record == 1]))}else{spec.mat[k,i,y,s] <- as.numeric(length(temp.st$Species))}
+               spec.mat[k,i,y,s] <- as.numeric(length(temp.st$Species[temp.st$New.Record == 1]))*sampled[rownames(sampled)==k,i,grep(dimnames(sampled)[[3]],pattern = years[y])]}
+                                   else{spec.mat[k,i,y,s] <- as.numeric(length(temp.st$Species))*sampled[rownames(sampled)==k,i,grep(dimnames(sampled)[[3]],pattern = years[y])]}
           }  # For plot
       }  # For Replicate
   }# For Species
 }# years 
+
 
 ### OBSERVATION COVARIATES 
 
@@ -170,7 +180,6 @@ date[is.na(date)] <- 0
 
 time <- (time - mean(time,na.rm = TRUE))/sd(time,na.rm = TRUE)
 time[is.na(time)] <- 0
-
 
 
 # SAVE THE DATA TO FILE # 
