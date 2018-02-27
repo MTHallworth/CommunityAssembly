@@ -1,0 +1,224 @@
+model {
+# This model is a dynamic occupancy model used to determine the occupancy
+# state of each point count location within Hubbard Brook. This 
+# Model was used to determine high-quality sites where 'site-dependence'
+# is likely a important factor. We expect that occupancy of less 'suitable'
+# sites will fluctuate more over the years. However, in years following 
+# favorable non-breeding conditions, less favorable sites should be
+# occupied at higher rates because more individuals survive the winter
+# period. We use the following model to 1) identify the 'high-quality' 
+# sites and also determine 'turn-over' and 'growth-rate' of each survey location.
+# 
+# This model was modified from Kery & Schaub chapter 13
+######################################################################
+#
+# Priors
+#
+######################################################################
+# Species HyperPriors
+Mulgamma1 ~ dnorm(0,0.001)
+Mulgamma2 ~ dnorm(0,0.001)
+Mulgamma3 ~ dnorm(0,0.001)
+Mulgamma4 ~ dnorm(0,0.001)
+Mulgamma5 ~ dnorm(0,0.001)
+
+MuBetaPsi1 ~ dnorm(0,0.001)
+MuBetaPsi2 ~ dnorm(0,0.001)
+MuBetaPsi3 ~ dnorm(0,0.001)
+MuBetaPsi4 ~ dnorm(0,0.001)
+
+MuBetaP1 ~ dnorm(0,0.001)
+MuBetaP2 ~ dnorm(0,0.001)
+MuBetaP3 ~ dnorm(0,0.001)
+
+MuAlphaPsi~ dnorm(0,0.001)
+MuAlphaP~ dnorm(0,0.001)
+
+MuBetalphi~ dnorm(0,0.001)
+
+MuAlphaLgamma~ dnorm(0,0.001)
+
+MuAlphaLphi ~ dnorm(0,0.001)
+
+# priors 
+for(s in 1:nspp){
+
+# Precision #
+taulgamma1[s] ~ dgamma(0.001,0.001)
+taulgamma2[s] ~ dgamma(0.001,0.001)
+taulgamma3[s] ~ dgamma(0.001,0.001)
+taulgamma4[s] ~ dgamma(0.001,0.001)
+taulgamma5[s] ~ dgamma(0.001,0.001)
+
+tauBetaPsi1[s] ~ dgamma(0.001,0.001)
+tauBetaPsi2[s] ~ dgamma(0.001,0.001)
+tauBetaPsi3[s] ~ dgamma(0.001,0.001)
+tauBetaPsi4[s] ~ dgamma(0.001,0.001)
+
+tauBetaP1[s] ~ dgamma(0.001,0.001)
+tauBetaP2[s] ~ dgamma(0.001,0.001)
+tauBetaP3[s] ~ dgamma(0.001,0.001)
+
+tauAlphaPsi[s] ~ dgamma(0.001,0.001)
+tauAlphaP[s] ~ dgamma(0.001,0.001)
+tauBetalphi[s] ~ dgamma(0.001,0.001)
+
+tauAlphaLgamma[s] ~ dgamma(0.001,0.001)
+tauAlphaLphi[s] ~ dgamma(0.001,0.001)
+
+#Standard deviation #
+sigmagamma1[s] <- 1/sqrt(taulgamma1[s])
+sigmagamma2[s] <- 1/sqrt(taulgamma2[s])
+sigmagamma3[s] <- 1/sqrt(taulgamma3[s])
+sigmagamma4[s] <- 1/sqrt(taulgamma4[s])
+sigmagamma5[s] <- 1/sqrt(taulgamma5[s])
+
+sigmaBetaPsi1[s] <- 1/sqrt(tauBetaPsi1[s])
+sigmaBetaPsi2[s] <- 1/sqrt(tauBetaPsi2[s])
+sigmaBetaPsi3[s] <- 1/sqrt(tauBetaPsi3[s])
+sigmaBetaPsi4[s] <- 1/sqrt(tauBetaPsi4[s])
+
+sigmaBetaP1[s] <- 1/sqrt(tauBetaP1[s])
+sigmaBetaP2[s] <- 1/sqrt(tauBetaP2[s])
+sigmaBetaP3[s] <- 1/sqrt(tauBetaP3[s])
+
+sigmaAlphaPsi[s] <- 1/sqrt(tauAlphaPsi[s])
+sigmaAlphaP[s] <- 1/sqrt(tauAlphaP[s])
+sigmaBetalphi[s] <- 1/sqrt(tauBetalphi[s])
+
+sigmaAlphaLgamma[s] <- 1/sqrt(tauAlphaLgamma[s])
+sigmaAlphaLphi[s] <- 1/sqrt(tauAlphaLphi[s])
+
+# PRIORS #
+alpha.psi[s] ~ dnorm(MuAlphaPsi,tauAlphaPsi[s])
+alpha.p[s] ~ dnorm(MuAlphaP,tauAlphaP[s])
+beta.lphi[s] ~ dnorm(MuBetalphi,tauBetalphi[s])
+
+beta.lgamma[1,s] ~ dnorm(Mulgamma1,taulgamma1[s])
+beta.lgamma[2,s] ~ dnorm(Mulgamma2,taulgamma2[s])
+beta.lgamma[3,s] ~ dnorm(Mulgamma3,taulgamma3[s])
+beta.lgamma[4,s] ~ dnorm(Mulgamma4,taulgamma4[s])
+beta.lgamma[5,s] ~ dnorm(Mulgamma5,taulgamma5[s])
+
+beta.psi[1,s] ~ dnorm(MuBetaPsi1,tauBetaPsi1[s])
+beta.psi[2,s] ~ dnorm(MuBetaPsi2,tauBetaPsi2[s])
+beta.psi[3,s] ~ dnorm(MuBetaPsi3,tauBetaPsi3[s])
+beta.psi[4,s] ~ dnorm(MuBetaPsi4,tauBetaPsi4[s])
+
+beta.p[1,s] ~ dnorm(MuBetaP1,tauBetaP1[s])
+beta.p[2,s] ~ dnorm(MuBetaP2,tauBetaP2[s])
+beta.p[3,s] ~ dnorm(MuBetaP3,tauBetaP3[s])
+
+phi[s]~dunif(0.3,0.7)   # survival
+
+for(y in 1:(nyears-1)){
+alpha.lgamma[s,y] ~ dnorm(MuAlphaLgamma,tauAlphaLgamma[s])
+alpha.lphi[s,y] ~ dnorm(MuAlphaLphi,tauAlphaLphi[s])
+} # y
+
+#####################################################################
+#
+# Ecological submodel 
+#
+#####################################################################
+for(i in 1:nsites){ # number of 50x50m grid cells
+ z[i,1,s]~dbern(psi1[i,s])
+ logit(psi1[i,s]) <- alpha.psi[s]+
+                     beta.psi[1,s]*ThermalSum[i,1]+
+                     beta.psi[2,s]*StrComplex[i]+ 
+                     beta.psi[3,s]*Precip[i,1]+
+                     beta.psi[4,s]*JuneTemp[i,1]
+
+	for(y in 2:nyears){
+
+      # Compute local density (prop of occupied neighbouring cells) for
+      # use as autologistic covariate
+      for (m in 1:cardneigh[i]){
+        # Estimated (latent) occurrence state of all neighbours
+        ConnSite[i,m,y-1,s] <- z[adjmat[i,m], y-1,s]
+      }
+
+    z[i,y,s]~dbern(muZ[i,y,s])
+    muZ[i,y,s] <- z[i,y-1,s]*phi[s]+(1-z[i,y-1,s])*gamma[i,s,y-1]
+
+      # Proportion of neighbours occupied (auto-covariate)
+      D[i,y-1,s] <- sum(ConnSite[i, 1:cardneigh[i], y-1,s]) / cardneigh[i]
+
+      logit(gamma[i,s,y-1]) <- alpha.lgamma[s,y-1] +
+                                beta.lgamma[1,s] * D[i, y-1,s] +
+				                beta.lgamma[2,s] * ThermalSum[i,y-1]+
+                                beta.lgamma[3,s] * StrComplex[i]+ 
+                                beta.lgamma[4,s] * Precip[i,y-1]+
+                                beta.lgamma[5,s] * JuneTemp[i,y-1] 
+  
+    } #y : 2:nyears
+}#i nsites
+#####################################################################
+#
+# Observation model 
+#
+#####################################################################
+for(i in 1:nsites){
+	for(r in 1:nreps){
+		for(y in 1:nyears){
+		    occ[i,r,y,s]~dbern(muy[i,r,y,s])
+			muy[i,r,y,s]<-z[i,y,s]*mean(p[i,,s,y])
+                   logit(p[i,r,s,y]) <- alpha.p[s]+
+                                        beta.p[1,s]*time[i,r,1]+
+                                        beta.p[2,s]*date[i,r,1]                                       
+			} #y : nyears
+		} #r : nreps
+
+#####################################################################
+#
+# Derived parameters of interest 
+#
+#####################################################################
+psi[i,1,s]<-psi1[i,s]
+	} #i : nsites
+	
+n.occupied[s,1]<-sum(z[1:nsites,1,s])
+
+mean.dispersal[s]<-mean(gamma[,s,])
+
+for(y in 2:nyears){
+	n.occupied[s,y]<-sum(z[1:nsites,y,s])
+	} #nyears
+	
+for(i in 1:nsites){
+Yrs.Occ[i,s]<-sum(z[i,,s])
+
+for(y in 2:nyears){
+	psi[i,y,s]<-psi[i,y-1,s]*phi[s]+(1-psi[i,y-1,s])*gamma[i,s,y-1]
+	growthrate[i,s,y]<-psi[i,y,s]/psi[i,y-1,s]
+	turnover[i,s,y-1]<-(1-psi[i,y-1,s])*gamma[i,s,y-1]/psi[i,y,s]
+     } #y : nyears
+   } # nsites
+ } #nspp
+ 
+ 
+for(y in 1:(nyears-1)){
+m.dispersal[y]<-mean(gamma[,,y])
+v.dispersal[y]<- sum(pow(gamma[,,y]-m.dispersal[y],2))/(nspp-1)
+ } #n years
+
+# Derived quantities
+# EffectSize difference #
+for(s in 1:nspp){
+effectlgamma1[s] <- Mulgamma1 - beta.lgamma[1,s] 
+effectlgamma2[s] <- Mulgamma2 - beta.lgamma[2,s] 
+effectlgamma3[s] <- Mulgamma3 - beta.lgamma[3,s] 
+effectlgamma4[s] <- Mulgamma4 - beta.lgamma[4,s] 
+effectlgamma5[s] <- Mulgamma5 - beta.lgamma[5,s] 
+
+for(l in 1:nspp){
+for(b in 1:5){
+ effectBeta[s,l,b] <- beta.lgamma[b,s]-beta.lgamma[b,l]
+ }
+ }
+}
+for(b in 1:5){
+ meanDiffBeta[b] <- mean(effectBeta[upperd[,1],upperd[,2],b])
+}
+ 
+}

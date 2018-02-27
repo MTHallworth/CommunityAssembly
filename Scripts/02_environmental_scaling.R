@@ -132,8 +132,15 @@ for(y in 1:length(yrs)){
 JuneMean[[y]] <- raster::rasterFromXYZ(cbind(HBEFgridcovs_sp@coords,apply(June[[y]],1,mean,na.rm = TRUE)))
 }
 
-#saveRDS(stack(JuneMean),"Data/juneMeanTemp.rds")
-#saveRDS(stack(MayMean),"Data/mayMeanTemp.rds")
+# read in HW shapefile 
+ HW <- shapefile("Spatial_Layers/SurveyPoints/HWsurveypoints.shp")
+
+mayMeanTemp <- extract(stack(MayMean),HW)
+juneMeanTemp <- extract(stack(JuneMean),HW)
+
+# saveRDS(mayMeanTemp,"Data/mayMeanTemp.rds")
+# saveRDS(juneMeanTemp,"Data/juneMeanTemp.rds")
+
 
 #############################################################################################################
 # 
@@ -239,3 +246,78 @@ ThermalSum[,y] <- extract(tempRast,HWplots,mean)
 }
 
 #saveRDS(ThermalSum,"Data/thermalsum.rds")
+
+#############################################################################
+# Canopy data from LiDAR # 
+
+library(raster)
+
+# Go through the different height classes #
+d <- vector('list',17)
+strat <- c("d00","d01","d02","d03","d04","d05","d06","d07","d08",
+           "d09","d10","d11","d12","d13","d14","d15","d16","d17")
+
+# Heights; strat
+# 0.5-1m; d00
+# 1-2m; d01
+# 2-3m; d02
+# 3-4m; d03
+# 4-5m; d04
+# 5-6m; d05
+# 6-7m; d06
+# 7-8m; d07
+# 8-9m; d08
+# 9-10m; d09
+# 10-12m; d10
+# 12-14m; d11
+# 14-16m; d12
+# 16-18m; d13
+# 18-20m; d14
+# 20-30m; d15
+# 30-40m; d16 # no values at this height
+# 40-50m; d17 # no values at this height
+
+# mosaic the datasets together # 
+for(i in 1:17){
+# read in files and create raster #
+density <- lapply(list.files("Spatial_Layers/Canopy/",pattern = paste0("*_",strat[i],".asc"),full.names = TRUE),raster)
+# if cells overlap - choose the maximum #
+density$fun <- max
+# zip all the rasters together to make a single raster #
+d[[i]] <- do.call(mosaic,density)
+}
+
+#############################################################################################################
+# 
+#
+# Read in data survey location data 
+#
+#
+#############################################################################################################
+########################################################################################
+
+VWpoints <- raster::shapefile("Spatial_Layers/SurveyPoints/HWsurveypoints.shp")
+
+VWpoints <- sp::spTransform(VWpoints,CRS=crs(d[[1]]))
+
+# generate 50m buffer around each point #
+pt50m <- rgeos::gBuffer(VWpoints,width = 50,byid = TRUE)
+
+# extract values in each density zone #
+dens_strata <- array(NA,c(nrow(pt50m),15))
+
+for(i in 1:15){
+dens_strata[,i]<-extract(d[[i]],pt50m, fun = mean)
+}
+
+# Shannon-weaver index of vegetation structure - diversity of structure #
+SHI <- apply(dens_strata,1,FUN = function(x){sum((x/sum(x))*log((x/sum(x))))*-1})
+
+SHI[is.na(SHI)]<-NA
+
+# add canopy complexity to VWpoints
+VWpoints$CanopyComplex <- SHI
+
+# shapefile(VWpoints,"Spatial_Layers/SurveyPoints/Schwarz_CanopyComplex.shp",overwrite = TRUE)
+# shapefile("Spatial_Layers/SurveyPoints/Schwarz_CanopyComplex.shp")
+

@@ -171,11 +171,13 @@ date[is.na(date)] <- 0
 time <- (time - mean(time,na.rm = TRUE))/sd(time,na.rm = TRUE)
 time[is.na(time)] <- 0
 
-#########################################################################################
-# load data for plot site covariates #
 
-PlotAttributes<-read.csv("Data/PlotAttributes.csv")
 
-names(PlotAttributes)
+# SAVE THE DATA TO FILE # 
+str(spec.mat, 1)
+str(time,1)
+str(date,1)
+#saveRDS(spec.mat,"Data/Abundance_array.rds")
+#saveRDS(time,"Data/TimeOfCount.rds")
+#saveRDS(date,"Data/DateOfCount.rds")
 
-HW<-which(PlotAttributes$ForestType=="Hardwoods")

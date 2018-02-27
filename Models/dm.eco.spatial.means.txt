@@ -1,0 +1,209 @@
+
+model {
+##################################################################################################################
+#
+#  Priors
+#
+##################################################################################################################
+# Species HyperPriors
+MuBeta1 ~ dnorm(0,0.001)
+MuBeta2 ~ dnorm(0,0.001)
+MuBeta3 ~ dnorm(0,0.001)
+MuBeta4 ~ dnorm(0,0.001)
+
+MuGam0 ~ dnorm(0,0.001)
+MuGam1 ~ dnorm(0,0.001)
+MuGam2 ~ dnorm(0,0.001)
+
+MuAlpha ~ dnorm(0,0.001)
+
+MuBetaP1 ~ dnorm(0,0.001)
+MuBetaP2 ~ dnorm(0,0.001)
+
+MupInt ~ dnorm(0,0.001)
+
+MuError ~ dnorm(0,0.001)
+
+for(s in 1:nspp){
+
+# Precision 
+tauGam0[s] ~ dgamma(0.01,0.01)
+tauGam1[s] ~ dgamma(0.01,0.01)
+tauGam2[s] ~ dgamma(0.01,0.01)
+
+tauBeta1[s] ~ dgamma(0.01,0.01)
+tauBeta2[s] ~ dgamma(0.01,0.01)
+tauBeta3[s] ~ dgamma(0.01,0.01)
+tauBeta4[s] ~ dgamma(0.01,0.01)
+
+tauBetaP1[s] ~ dgamma(0.01,0.01)
+tauBetaP2[s] ~ dgamma(0.01,0.01)
+
+taupInt[s] ~ dgamma(0.01,0.01)
+tauAlpha[s] ~ dgamma(0.01,0.01)
+
+#Standard deviation #
+sigmaGam0[s] <- 1/sqrt(tauGam0[s])
+sigmaGam1[s] <- 1/sqrt(tauGam1[s])
+sigmaGam2[s] <- 1/sqrt(tauGam2[s])
+
+sigmaBeta1[s] <- 1/sqrt(tauBeta1[s])
+sigmaBeta2[s] <- 1/sqrt(tauBeta2[s])
+sigmaBeta3[s] <- 1/sqrt(tauBeta3[s])
+sigmaBeta4[s] <- 1/sqrt(tauBeta4[s])
+
+sigmaBetaP1[s] <- 1/sqrt(tauBetaP1[s])
+sigmaBetaP2[s] <- 1/sqrt(tauBetaP2[s])
+
+sigmataupInt[s] <- 1/sqrt(taupInt[s])
+sigmatauAlpha[s] <- 1/sqrt(tauAlpha[s])
+
+# Model coefficients
+   gam0[s] ~ dnorm(MuGam0, tauGam0[s])
+   gam1[s] ~ dnorm(MuGam1, tauGam1[s])
+   gam2[s] ~ dnorm(MuGam2, tauGam2[s])
+   pInt[s] ~ dnorm(MupInt, taupInt[s])
+   alpha[s] ~ dnorm(MuAlpha,tauAlpha[s])
+   
+# Beta coefficients
+       beta[s,1]~dnorm(MuBeta1,tauBeta1[s])
+       beta[s,2]~dnorm(MuBeta2,tauBeta2[s])
+	   beta[s,3]~dnorm(MuBeta3,tauBeta3[s])
+	   beta[s,4]~dnorm(MuBeta4,tauBeta4[s])
+	   
+# Beta coefficients
+      betaP[s,1]~dnorm(MuBetaP1,tauBetaP1[s])  
+	  betaP[s,2]~dnorm(MuBetaP2,tauBetaP2[s])   
+}    #nspp
+
+for(k in 1:nyears){
+Error[k]~dnorm(MuError,0.001)
+}    #nyears
+
+radius <- 50
+area <- pi*pow(radius,2)
+
+##################################################################################################################
+#
+#  Likelihood
+#
+##################################################################################################################
+for(s in 1:nspp){                            # Species
+# Species specific survival
+       phi.s[s] ~ dunif(0.3,0.7)                  # prior for survival
+
+   for(i in 1:nschwarz) {                       # Schwarz Plot
+  
+       N[i,1,s] ~ dpois(lambda[i,1,s])T(0,10)
+       lambda[i,1,s]<-exp(alpha[s]+
+                          beta[spp[s],1]*ThermalSum[i,1]+
+                          beta[spp[s],2]*StrComplex[i]+
+                          beta[spp[s],3]*Precip[i,1]+
+                          beta[spp[s],4]*JuneTemp[i,1]+
+                          Error[1])                                                                        
+
+   	for(j in 1:nreps) {                        # Replicates
+     	    y[i,j,1,s] ~ dbin(p[i,j,1,s], N[i,1,s]) 
+     	    p[i,j,1,s]<-1/(1+exp(-logit.p[i,j,1,s]))
+     	    logit.p[i,j,1,s]<-pInt[spp[s]]+
+                       	      betaP[spp[s],1]*time[i,j,s]+
+                       	      betaP[spp[s],2]*date[i,j,s]                           
+} #REPS
+
+##################### Year 2000-2015 ##################################
+for(k in 2:nyears) {  
+
+# Compute local density (prop of occupied neighbouring cells) for
+      # use as autologistic covariate
+      for (m in 1:cardneigh[i]){
+        # Estimated Abundance of all neighbours
+        ConnSite[i,m,k-1,s] <- N[adjmat[i,m], k-1,s]
+      }
+
+# Average number of interacting individuals (auto-covariate)
+D[i,k-1,s] <- sum(ConnSite[i, 1:cardneigh[i], k-1,s]) / cardneigh[i]
+	  
+S[i,k-1,s] ~ dbin(phi.s[s],N[i,k-1,s])    # Survival
+
+G[i,k-1,s] ~ dpois(Gamma[i,k-1,s])T(0,10) # Recruits
+
+recruits.ha[i,k-1,s]<-G[i,k-1,s]/(area/10000)
+
+Gamma[i,k-1,s] <- exp(gam0[s]+
+                      gam1[s]*N[i,k-1,s]+ # Density Dependence 
+		              gam2[s]*D[i,k-1,s] + # Neighbor density # Conspecific attraction 
+                      beta[spp[s],1]*ThermalSum[i,k]+
+                      beta[spp[s],2]*StrComplex[i]+
+                      beta[spp[s],3]*Precip[i,k]+
+                      beta[spp[s],4]*JuneTemp[i,k]+
+                      Error[k])  
+
+N[i,k,s] ~ dpois(Npred[i,k,s])T(0,10)
+
+Npred[i,k,s] <- S[i,k-1,s] + G[i,k-1,s]
+
+for(j in 1:nreps) {                        # Replicates
+
+    y[i,j,k,s] ~ dbin(p[i,j,k,s], N[i,k,s]) 
+
+    p[i,j,k,s]<-1/(1+exp(-logit.p[i,j,k,s]))
+
+    logit.p[i,j,k,s]<-pInt[spp[s]]+
+                           betaP[spp[s],1]*time[i,j,s]+
+                           betaP[spp[s],2]*date[i,j,s]
+          } #REPS
+       } # Years
+   }        # SITES
+}         # SPECIES
+
+#############################################################################################################################
+#############################################################################################################################
+#
+# Derived parameters 
+#
+#############################################################################################################################
+#############################################################################################################################
+# Difference in beta estimates between species #
+
+
+# Calculate the population size sampled at HBEF in each year, k.
+
+for(s in 1:nspp){
+for(k in 1:nyears) {
+  Ntot[k,s] <- sum(N[,k,s])
+  } # nyears
+}# species
+
+
+# Rank order of abundance 
+for(k in 1:nyears){
+ for(i in 1:nschwarz){
+ranked.order[i,k,1:nspp] <- rank(-N[i,k,])
+log.abund[i,k,1:nspp] <- log(N[i,k,]+0.00001/sum(N[i,k,]))
+ } # nschwarz
+ranked.vw[k,1:nspp] <- rank(-Ntot[k,])
+log.abund.vw[k,1:nspp] <- log(Ntot[k,]/sum(Ntot[k,]))
+}  # nyears
+
+
+# Species specific population growth rates
+
+# Derived quantities
+
+for(s in 1:nspp){
+for(l in 1:nspp){
+for(b in 1:ncovs){
+ effectBeta[s,l,b] <- beta[s,b]-beta[l,b]
+ }
+ effectGams[s,l,1] <- gam1[s]-gam1[l]
+ effectGams[s,l,2] <- gam2[s]-gam2[l]
+ }
+}
+for(b in 1:ncovs){
+ meanDiffBeta[b] <- mean(effectBeta[upperd[,1],upperd[,2],b])
+}
+ meanDiffGams[1] <- mean(effectGams[upperd[,1],upperd[,2],1])
+ meanDiffGams[2] <- mean(effectGams[upperd[,1],upperd[,2],2])
+
+#End Model
+}
