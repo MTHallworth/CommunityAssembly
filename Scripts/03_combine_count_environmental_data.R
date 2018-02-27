@@ -46,6 +46,7 @@ Precip <- (Precip-mean(Precip,na.rm = TRUE))/sd(Precip,na.rm = TRUE)
 
 # Thermal Sum 
 ThermSum <- readRDS("Data/thermalsum.rds")
+ThermSum <- (ThermSum - mean(ThermSum,na.rm = TRUE))/sd(ThermSum,na.rm = TRUE)
 
 # Structural Complexity 
 complex <- raster::shapefile("Spatial_Layers/SurveyPoints/Schwarz_CanopyComplex.shp")
