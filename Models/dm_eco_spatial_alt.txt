@@ -9,37 +9,37 @@ model {
 MuAlpha ~ dnorm(0,0.001)
 MupInt ~ dnorm(0,0.001)
 MuError ~ dnorm(0,0.001)
+
 for(i in 1:ncovs){
 		MuBeta[i] ~ dnorm(0,0.001)
-    for(s in 1:nspp){
-		# Std
-		sigmaBeta[s,i] ~ dunif(0,100)
+		sigmaBeta[i] ~ dunif(0,100)
 		# Precision
-		tauBeta[s,i] <- 1/pow(sigmaBeta[s,i],2)
+		tauBeta[i] <- 1/pow(sigmaBeta[i],2)
+    for(s in 1:nspp){
 		# Beta coefficients
-       beta[s,i]~dnorm(MuBeta[i],tauBeta[s,i])
+       beta[s,i]~dnorm(MuBeta[i],tauBeta[i])
 	}
 }
 for(i in 1:pcovs){
 		MuBetaP[i] ~ dnorm(0,0.001)
-    for(s in 1:nspp){		
-		# Std
-		sigmaBetaP[s,i] ~ dunif(0,100)
+		# std
+	   sigmaBetaP[i] ~ dunif(0,100)
 		# Precision
-		tauBetaP[s,i] <- 1/pow(sigmaBetaP[s,i],2)
+		tauBetaP[i] <- 1/pow(sigmaBetaP[i],2)
+    for(s in 1:nspp){		
 		# Beta coefficients
-        betaP[s,i]~dnorm(MuBetaP[i],tauBetaP[s,i])  
+        betaP[s,i]~dnorm(MuBetaP[i],tauBetaP[i])  
 	}
 }
 for(i in 1:3){
 		MuGam[i] ~ dnorm(0,0.001)
-    for(s in 1:nspp){			
 		# Std
-		sigmaGam[s,i] ~ dunif(0,100)
+		sigmaGam[i] ~ dunif(0,100)
 		# Precision 
-		tauGam[s,i] <- 1/pow(sigmaGam[s,i],2)
+		tauGam[i] <- 1/pow(sigmaGam[i],2)
+    for(s in 1:nspp){			
         # Model coefficients
-        gam[i,s] ~ dnorm(MuGam[i], tauGam[s,i])
+        gam[i,s] ~ dnorm(MuGam[i], tauGam[i])
 	}
 }
 for(s in 1:nspp){
