@@ -1,5 +1,19 @@
-library(raster)
-library(jagsUI)
+#### -------------------- set path to library dir --------------------------- #### 
+
+library(parallel,lib.loc="/home/hallworthm/CostOfRepro/Packages")
+library(coda, lib.loc="/home/hallworthm/CostOfRepro/Packages")
+library(grid)
+library(lattice,lib.loc="/home/hallworthm/CostOfRepro/Packages")
+library(rjags,lib.loc="/home/hallworthm/CostOfRepro/Packages")
+library(jagsUI,lib.loc="/home/hallworthm/CostOfRepro/Packages")
+
+
+#### -------------------- set path to library dir --------------------------- ####
+
+my.path <- "/home/hallworthm/CostOfRepro/Packages"
+
+.libPaths(c(my.path,.libPaths()))
+
 
 # Read in abundance data #
 win.data <- readRDS("Data/AbunData.rds")
@@ -24,13 +38,17 @@ N<-function(x){
  
 inits<-function() list(N=N(win.data$y))
 
-params<-c("gam","ranked.order","ranked.vw","N",
-          "beta","betaP","MuBeta","MuGam","meanDiffBeta","meanDiffGams")
+params<-c("MuAlpha","MupInt","MuError",
+          "MuBeta","sigmaBeta","beta","MuBetaP",
+          "sigmaBetaP","betaP","MuGam","sigmaGam",
+          "gam", "pInt","alpha","Error","phi.s",
+          "ranked.order","ranked.vw","N","recruits.ha",
+          "Ntot","log.abund","meanDiffBeta","meanDiffGams")
 
-n.iter <- 10
-n.burn <- 5
-n.thin <- 1
-n.adapt <- 0
+n.iter <- 50000
+n.burn <- 10000
+n.thin <- 10
+n.adapt <- 5000
 n.chains <- 3
 
  Sys.time()
@@ -52,12 +70,17 @@ n.chains <- 3
 proc.time()-a
  Sys.time()
 
-saveRDS(dm.fit.spp,"dm.fit.spp.rds")
-
-source("Scripts/sims.list.R")
+saveRDS(dm.fit.spp,"dm_fit_spp_basic.rds")
+				
+source("Scripts/sims.list.R")	
 
 Sys.time()
 a<-proc.time()
 dm <- process.output(dm.fit.spp[[1]],Rhat = FALSE)
 proc.time()-a
 Sys.time()
+
+# save results #
+saveRDS(dm[c(2:12)],paste0("DynAbun_eco_spatial_",Sys.Date(),".rds"))
+saveRDS(dm[1],paste0("DynAbun_simslist_",Sys.Date(),".rds"))
+

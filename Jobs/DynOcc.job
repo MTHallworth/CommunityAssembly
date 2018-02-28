@@ -1,0 +1,25 @@
+﻿# /bin/sh 
+# ----------------Parameters---------------------- #
+#$  -S /bin/sh
+#$ -pe mthread 3
+#$ -q lThM.q 
+#$ -l mres=12G,h_data=12G,h_vmem=30G,himem
+#$ -cwd
+#$ -j y
+#$ -N DynOccupancy
+#$ -o DynOccupancy.log
+#$ -m bea
+#$ -M HallworthM@si.edu
+#
+# ----------------Modules------------------------- #
+module load bioinformatics/jags/4.2
+module load tools/R/3.4.1
+#
+# ----------------Your Commands------------------- #
+#
+echo + `date` job $JOB_NAME started in $QUEUE with jobID=$JOB_ID on $HOSTNAME
+echo + NSLOTS = $NSLOTS
+#
+Rscript Scripts/04_run_occupancy_analysis.R
+#
+echo = `date` job $JOB_NAME done
