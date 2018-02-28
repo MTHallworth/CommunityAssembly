@@ -109,7 +109,25 @@ win.data <- list(y = spec.mat,
 # saveRDS(win.data,"Data/AbunData.rds")
 
 # CONVERT ABUNDANCE DATA TO OCCUPANCY #
-occ.data <- win.data
-occ.data$y[occ.data$y>1]<-1        
+# Occupancy # 
+win.data <- list(occ = spec.mat,
+                 nschwarz = dim(spec.mat)[1],
+                 nyears = dim(spec.mat)[3],
+                 nreps = dim(spec.mat)[2],
+                 nspp = dim(spec.mat)[4],
+                 spp = 1:13,
+                 ncovs = 4,
+                 pcovs = 2,
+                 ThermalSum = ThermSum,
+                 StrComplex = StrComplex,
+                 Precip = Precip, 
+                 JuneTemp = juneMeanTemp,
+                 cardneigh = cardneigh,
+                 adjmat = adjmat,
+                 date = date,
+                 time = time,
+                 upperd = upperd)
 
-# saveRDS(occ.data,"Data/OccuData.rds")      
+win.data$occ[win.data$occ>1]<-1
+
+# saveRDS(win.data,"Data/OccuData.rds")      

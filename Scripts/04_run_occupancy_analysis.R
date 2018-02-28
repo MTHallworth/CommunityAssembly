@@ -5,20 +5,31 @@ library(jagsUI)
 win.data <- readRDS("Data/OccuData.rds")
 win.data$pi <- pi
 
-
 # Inits function for occupancy model #
 Zst <- array(NA,c(win.data$nschwarz,win.data$nyears,win.data$nspp))
 for(s in 1:win.data$nspp){
-Zst[,,s] <- apply(win.data$y[,,,s],c(1,3),max,na.rm = TRUE)
+Zst[,,s] <- apply(win.data$occ[,,,s],c(1,3),max,na.rm = TRUE)
 }
 Zst[Zst == "-Inf"]<-1
 
 inits <- function(){list(z = Zst)}
 
 
-params <- c("m.dispersal","v.dispersal","alpha.lgamma", "beta.lgamma",
-             "n.occupied","growthrate","turnover","spp.rich", "mean.dispersal",
-             "Yrs.Occ","beta.psi","alpha.psi")
+params <- c(# Hyperparameters 
+            "Mulgamma","sigmalgamma",
+            "MuBetaPsi","sigmaBetaPsi",
+            "MuBetaP", "sigmaBetaP",
+            "MuAlphaPsi", "MuAlphaP",
+            "MuBetalphi", "MuAlphaLgamma",
+            "sigmaAlphaPsi","sigmaAlphaP",
+            "sigmaBetalphi", "sigmaAlphaLgamma",
+            "sigmaAlphaLphi", 
+            # estimates 
+            "alpha.psi", "alpha.p","beta.lphi","beta.lgamma",
+            "beta.psi", "beta.p","phi","alpha.lgamma",
+            "m.dispersal","v.dispersal","mean.dispersal",
+             "n.occupied","Yrs.Occ","growthrate","turnover", 
+            "effectlgamma","meanDiffBeta")
 
 
 Sys.time()
@@ -36,7 +47,9 @@ Dyn.Occ <- jagsUI::jags.basic(data = win.data,
 							parallel = TRUE,
 							seed = 04823)
 													
-					
+proc.time()-a
+Sys.time()	
+				
 source("Scripts/sims.list.R")	
 	
 
