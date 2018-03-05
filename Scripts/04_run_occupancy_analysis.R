@@ -57,7 +57,7 @@ n.adapt <- 5000
 n.chains <- 3
 
 Sys.time()
-a<-proc.time()
+a<-Sys.time()
 Dyn.Occ <- jagsUI::jags.basic(data = win.data,
 							model = "Models/dynocc_eco_spatial_alt.txt",
 							parameters.to.save = params,
@@ -71,7 +71,7 @@ Dyn.Occ <- jagsUI::jags.basic(data = win.data,
 							parallel = TRUE,
 							seed = 04823)
 													
-proc.time()-a
+Sys.time()-a
 Sys.time()	
 
 # Save model output incase need to re-run or update #
@@ -82,7 +82,7 @@ source("Scripts/sims.list.R")
 	
 DynOcc <- process.output(Dyn.Occ[[1]],Rhat = FALSE)
 
-proc.time()-a
+Sys.time()-a
 Sys.time()
 
 # save results #

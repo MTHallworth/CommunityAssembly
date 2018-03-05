@@ -156,7 +156,7 @@ for(k in 1:nyears) {
 for(k in 1:nyears){
  for(i in 1:nschwarz){
 	ranked.order[i,k,1:nspp] <- rank(-N[i,k,])
-	log.abund[i,k,1:nspp] <- log(N[i,k,]+0.00001/sum(N[i,k,]))
+	log.abund[i,k,1:nspp] <- log((N[i,k,]+0.00001)/sum(N[i,k,]))
  } # nschwarz
 	ranked.vw[k,1:nspp] <- rank(-Ntot[k,])
 	log.abund.vw[k,1:nspp] <- log(Ntot[k,]/sum(Ntot[k,]))

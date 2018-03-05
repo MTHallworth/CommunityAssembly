@@ -48,11 +48,11 @@ params<-c("MuAlpha","MupInt","MuError",
 n.iter <- 50000
 n.burn <- 10000
 n.thin <- 10
-n.adapt <- 5000
+n.adapt <- 1000
 n.chains <- 3
 
  Sys.time()
- a<-proc.time()
+ a<-Sys.time()
  dm.fit.spp<-jagsUI::jags.basic(model ="Models/dm_eco_spatial_alt.txt", 
                                 module = c('glm'),
 								data = win.data,
@@ -67,17 +67,17 @@ n.chains <- 3
 								save.model = TRUE,
 								DIC = FALSE,
 			                    seed = 04823)
-proc.time()-a
- Sys.time()
+Sys.time()-a
+Sys.time()
 
 saveRDS(dm.fit.spp,"dm_fit_spp_basic.rds")
 				
 source("Scripts/sims.list.R")	
 
 Sys.time()
-a<-proc.time()
+a<-Sys.time()
 dm <- process.output(dm.fit.spp[[1]],Rhat = FALSE)
-proc.time()-a
+Sys.time()-a
 Sys.time()
 
 # save results #
