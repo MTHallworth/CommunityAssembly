@@ -1,13 +1,12 @@
 ﻿# /bin/sh 
 # ----------------Parameters---------------------- #
 #$  -S /bin/sh
-#$ -pe mthread 3
-#$ -q lThM.q 
-#$ -l mres=12G,h_data=12G,h_vmem=120G,himem
+#$ -q sThM.q 
+#$ -l mres=25G,h_data=25G,h_vmem=40G,himem
 #$ -cwd
 #$ -j y
-#$ -N DynAbund
-#$ -o DynAbund.log
+#$ -N CommSync
+#$ -o CommSync.log
 #$ -m bea
 #$ -M HallworthM@si.edu
 #
@@ -20,6 +19,6 @@ module load tools/R/3.4.1
 echo + `date` job $JOB_NAME started in $QUEUE with jobID=$JOB_ID on $HOSTNAME
 echo + NSLOTS = $NSLOTS
 #
-Rscript Scripts/05_run_abundance_analysis.R
+Rscript Scripts/06_community_synchrony.r
 #
 echo = `date` job $JOB_NAME done

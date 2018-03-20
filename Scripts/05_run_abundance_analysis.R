@@ -45,10 +45,10 @@ params<-c("MuAlpha","MupInt","MuError",
           "ranked.order","ranked.vw","N","recruits.ha",
           "Ntot","log.abund","meanDiffBeta","meanDiffGams")
 
-n.iter <- 50000
-n.burn <- 10000
-n.thin <- 10
-n.adapt <- 1000
+n.iter <- 100
+n.burn <- 10
+n.thin <- 1
+n.adapt <- 10
 n.chains <- 3
 
  Sys.time()
